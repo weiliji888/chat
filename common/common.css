@@ -1,0 +1,20 @@
+/* 公共样式 */
+:root{
+	--whiteBg: #1e90ff;
+	--grayColor: #666;
+	--redBg: #ff0000;
+	--grayColorNine: #999999;
+	--bgGray: #eeeeee;
+	--grayColor2: #bf4747;
+	--whiteBack: #ffffff;
+}
+.flex{ display: flex;}
+.flex-row{ flex-direction: row;}
+.flex-col{ flex-direction: column;}
+.jc-sb{ justify-content: space-between;}
+.jc-sa{ justify-content: space-around;}
+.jc-ce{ justify-content: center;}
+.ai-ce{ align-items: center;}
+
+.white-bg{ background-color: var(--redBg);}
+.padding20{ padding: 20rpx;}
