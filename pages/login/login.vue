@@ -156,8 +156,8 @@ export default {
 				data: this.loginParams
 			}).then((res)=>{
 				if(res.code == 300009) {
-					uni.setStorageSync('token', res.data.token);
-					uni.setStorageSync('userinfo', res.data);
+					// uni.setStorageSync('token', res.data.token);
+					// uni.setStorageSync('userinfo', res.data);
 					uni.showToast({title: res.msg, icon:'success'});
 					setTimeout(()=>{ uni.switchTab({url: '/pages/home/home'})}, 1500);
 				} else {

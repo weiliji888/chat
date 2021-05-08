@@ -16,6 +16,12 @@ Vue.prototype.$socket = websocket
 import uView from "./uview-ui";
 Vue.use(uView);
 
+// vuex 挂载
+import store from './store'
+Vue.prototype.$sotre = store
+Vue.config.productionTip = false
+// end
+
 App.mpType = 'app'
 
 // let main = plus.android.runtimeMainActivity();
