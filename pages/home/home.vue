@@ -56,9 +56,12 @@ export default {
 	},
 	onLoad() {
 		let _this = this
-		let list = uni.getStorageSync('msgLists')
-		_this.lists = list ? list : []
-		uni.$on('storage', (data) => {  
+		this.$nextTick(() => {
+			let list = uni.getStorageSync('msgLists')
+			_this.lists = list ? list : []
+		})
+		uni.$on('storage', (data) => {
+			// console.log('进入这里3')
 			let list = uni.getStorageSync('msgLists')
 			_this.lists = list
 		})

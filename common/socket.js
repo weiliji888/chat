@@ -108,8 +108,9 @@ class websocketUtil {
 	
 	// 处理消息列表
 	handleMessage(data, isSend=false) {
+		// console.log('进入这里1')
 		var list = uni.getStorageSync('msgLists') ? uni.getStorageSync('msgLists') : [] 
-		console.log(list);return;
+		// console.log(list);
 		var info = {
 			from_id: data.from_id,
 			from_name: data.from_name,
@@ -118,18 +119,20 @@ class websocketUtil {
 			to_name: data.to_name,
 			to_avatar: data.to_avatar,
 			data: [data],
-			noReadNum: 1,
+			noReadNum: 0,
 		}
-		if(!list) {
+		if(list.length < 1) {
 			list.push(info)
 		} else {
 			let ok = false
 				// 接收
 			for(let i=0; i<list.length; i++) {
 				// 接收
-				if(list[i].from_id == data.from_id) {
+				if(list[i].from_id == data.from_id || list[i].from_id == data.to_id) {
 					list[i].data = list[i].data.concat(data)
-					list[i].noReadNum += 1
+					// 判断是否是自己发送的，如果是，则未读不增加 from_id 和自己的 user_id 一样
+					uni.getStorageSync('user_info').user_id == data.from_id ? list[i].noReadNum = 0 : list[i].noReadNum += 1 
+					// console.log(uni.getStorageSync('user_info'))
 					list.unshift(list.splice(i, 1)[0])
 					ok = true
 					break

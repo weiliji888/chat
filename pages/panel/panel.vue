@@ -87,16 +87,17 @@ export default {
 				type: 'userClientChat',
 				msgType: 'text',
 				code: 200,
-				msg: 'ok' ,
+				msg: 'ok',
+				noReadNum: 0,
 			};
 			
 			this.input = null;
 			this.msgList.push(data)
 			this.scrollTotopFunc(); // 滚动
 			let message = this.$socket._formate(data)
-			this.pushMsgLists(data)
-			// this.$socket.handleMessage(data)
+			// this.pushMsgLists(data)
 			this.$socket.send(message)
+			this.$socket.handleMessage(data)
 		},
 		/**
 		 * 新消息加入本地列表
@@ -165,24 +166,38 @@ export default {
 	},
 	onLoad(option) {
 		const item = JSON.parse(decodeURIComponent(option.param)); //用户 token
-		this.index = item.index 
+		this.index = item.index
 		this.to_id = item.to_id;
 		this.to_name = item.to_name;
 		this.to_avatar = item.to_avatar
 		this.getUserMsg(); // 获取用户聊天信息
 		this.initData(); // 初始化高度
-		console.log(item)
+		// console.log(item)
 		var _this = this;
 		// 消息
 		this.$nextTick(() => {
 			let list = uni.getStorageSync('msgLists')
-			for(let i=0; i<list.length; i++) {
-				if(list[i].to_id == _this.user.user_id) {
-					_this.msgList = list[i].data
+			if(this.index != null) {
+				_this.msgList = list[this.index].data // 点击消息列表进来的
+				list[this.index].noReadNum = 0
+				uni.setStorageSync('msgLists', list)
+				uni.$emit('storage', 1);
+			} else {
+				// 点击好友列表进来的，用from_id和to_id来判断聊天对象并获取聊天内容
+				for(let i=0; i<list.length; i++) {
+					console.log(list[i])
+					if(list[i].from_id == _this.user.user_id && list[i].to_id == this.to_id) {
+						_this.msgList = list[i].data
+						list[i].noReadNum = 0
+						uni.setStorageSync('msgLists', list)
+						uni.$emit('storage', 1);
+					}
 				}
 			}
+			this.scrollTotopFunc() // 滚动到最底部
 		})
 		uni.$on('storage', (data) => {
+			// console.log('进入这里2')
 			let list = uni.getStorageSync('msgLists')
 			for(let i=0; i<list.length; i++) {
 				if(list[i].to_id == _this.user.user_id) {
