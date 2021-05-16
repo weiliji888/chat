@@ -8,3 +8,7 @@
 
 ## vuex
 1. 加入vuex，监听登录状态
+
+## 笔记本git
+1. add git
+## xx
