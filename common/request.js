@@ -20,12 +20,5 @@ export default {
 			})
 		})
 	},
-	/**
-	 * 登录验证 
-	 */
-	loginCheck() {
-		if(!uni.getStorageSync('userinfo')) {
-			uni.navigateTo({url: '/pages/login/login'})
-		}
-	}
+	/***/
 }

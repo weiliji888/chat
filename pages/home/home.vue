@@ -5,7 +5,7 @@
 		</view>
 		
 		<!-- 消息列表 -->
-		<msgLists :lists="lists" v-on:pchat="chat" v-on:touched="touched" v-on:deleList="deleList"></msgLists>
+		<msgLists :lists="lists" :from_id="user.user_id" v-on:pchat="chat" v-on:touched="touched" v-on:deleList="deleList"></msgLists>
 	</view>
 </template>
 
@@ -19,26 +19,8 @@ export default {
 		return {
 			keyword: '', // 搜索内容
 			// 消息列表
-			lists: [
-				{
-					token: 'dfdf3e34242',
-					avatar: '/static/logo.png', 
-					username: '老王', 
-					newestMsg: '发的辅导辅导费大幅度风动旛动放大幅度风动旛动', 
-					time: '2021-01-01',
-					count: 1,
-					showDelete: false,
-				},
-				{
-					token: 'dfdf23234242',
-					avatar: '/static/logo.png', 
-					username: 'A酱', 
-					newestMsg: 'sdsd都奉顺颠三倒四多颠三倒四多所', 
-					time: '2021-01-02',
-					count: 12,
-					showDelete: false,
-				},
-			],
+			lists: [],
+			user: {}, // 
 		};
 	},
 	methods: {
@@ -73,7 +55,15 @@ export default {
 		}
 	},
 	onLoad() {
-		this.$http.loginCheck(); // 登录验证
+		let _this = this
+		let list = uni.getStorageSync('msgLists')
+		_this.lists = list ? list : []
+		uni.$on('storage', (data) => {  
+			let list = uni.getStorageSync('msgLists')
+			_this.lists = list
+		})
+		
+		this.user = uni.getStorageSync('user_info')
 	}
 };
 </script>

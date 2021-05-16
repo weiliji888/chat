@@ -2,9 +2,11 @@
 export default {
 	onLaunch: function() {
 		// 如果已存在用户信息则自动登录
-		if(uni.getStorageSync('userinfo')) {
-			uni.switchTab({url: '/pages/goods/goods'})
-		}
+		// if(this.$sotre.store.state.loginStatus) {
+		// 	uni.switchTab({url: '/pages/goods/goods'})
+		// } else {
+		// 	uni.navigateTo({ url: '/pages/index/index' })
+		// }
 	},
 	onShow: function() {
 		// console.log('App Show');

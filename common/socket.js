@@ -7,11 +7,11 @@ class websocketUtil {
 		this.timeout= time //多少秒执行检测
 		this.heartbeatInterval= null //检测服务器端是否还活着
 		this.reconnectTimeOut= null //重连之后多久再次重连
-
+		
 		try {
 			return this.connectSocketInit()
 		} catch (e) {
-			console.log('catch');
+			// console.log('catch');
 			this.is_open_socket = false
 			this.reconnect();
 		}
@@ -22,39 +22,45 @@ class websocketUtil {
 		this.socketTask = uni.connectSocket({
 			url: this.url,
 			success:()=>{
-				console.log("正准备建立websocket中...");
+				// console.log("正准备建立websocket中...");
 				// 返回实例
 				return this.socketTask
 			},
 		});
 		this.socketTask.onOpen((res) => {
-			console.log("WebSocket连接正常！");
+			// console.log("WebSocket连接正常！");
 			clearTimeout(this.reconnectTimeOut)
 			clearTimeout(this.heartbeatInterval)
 			this.is_open_socket = true;
 			this.start();
 			// 注：只有连接正常打开中 ，才能正常收到消息
 			this.socketTask.onMessage((res) => {
-				console.log(res.data)
+				let message = JSON.parse(res.data)
+				switch(message.type) {
+					case 'ping':
+						break
+					case 'userClientBindSocket':
+						// 绑定 uid
+						break
+					case 'userClientChat':
+						// 聊天
+						this.handleMessage(message);
+						break
+					default:
+						break
+				}
 			});
 		})
-		// 监听连接失败，这里代码我注释掉的原因是因为如果服务器关闭后，和下面的onclose方法一起发起重连操作，这样会导致重复连接
-		// uni.onSocketError((res) => {
-		// 	console.log('WebSocket连接打开失败，请检查！');
-		// 	this.is_open_socket = false;
-		// 	this.reconnect();
-		// });
 		// 这里仅是事件监听【如果socket关闭了会执行】
 		this.socketTask.onClose(() => {
-			console.log("已经被关闭了")
+			// console.log("已经被关闭了")
 			this.is_open_socket = false;
 			this.reconnect();
 		})
 	}
 	
 	//发送消息
-	send(value){
-		// 注：只有连接正常打开中 ，才能正常成功发送消息
+	send(value) {
 		this.socketTask.send({
 			data: value,
 			async success() {
@@ -63,15 +69,15 @@ class websocketUtil {
 		});
 	}
 	//开启心跳检测
-	start(){
+	start() {
 		this.heartbeatInterval = setTimeout(()=>{
-			this.data={value:"传输内容",method:"方法名称"}
-			console.log(this.data)
+			this.data={ type: 'ping', value:"心跳检测", method:"" }
 			this.send(JSON.stringify(this.data));
-		},this.timeout)
+			// console.log(this.data)
+		}, this.timeout)
 	}
 	//重新连接
-	reconnect(){
+	reconnect() {
 		//停止发送心跳
 		clearInterval(this.heartbeatInterval)
 		//如果不是人为关闭的话，进行重连
@@ -80,6 +86,62 @@ class websocketUtil {
 				this.connectSocketInit();
 			},3000)
 		}
+	}
+	
+	// 格式化消息格式
+	_formate(data) {
+		var data = {
+			type: data.type ? data.type : 'message',
+			msgType: data.msgType ? data.msgType : 'text',
+			data: data.data ? data.data : '',
+			code: data.code ? data.code : 200,
+			msg: data.msg ? data.msg : 'ok',
+			from_id: data.from_id ? data.from_id : 0,
+			from_name: data.from_name ? data.from_name : '',
+			from_avatar: data.from_avatar ? data.from_avatar : '',
+			to_id: data.to_id ? data.to_id : 0,
+			to_name: data.to_name ? data.to_name : '',
+			to_avatar: data.to_avatar ? data.to_avatar : '',
+		}
+		return JSON.stringify(data)
+	}
+	
+	// 处理消息列表
+	handleMessage(data, isSend=false) {
+		var list = uni.getStorageSync('msgLists') ? uni.getStorageSync('msgLists') : [] 
+		console.log(list);return;
+		var info = {
+			from_id: data.from_id,
+			from_name: data.from_name,
+			from_avatar: data.from_avatar,
+			to_id: data.to_id,
+			to_name: data.to_name,
+			to_avatar: data.to_avatar,
+			data: [data],
+			noReadNum: 1,
+		}
+		if(!list) {
+			list.push(info)
+		} else {
+			let ok = false
+				// 接收
+			for(let i=0; i<list.length; i++) {
+				// 接收
+				if(list[i].from_id == data.from_id) {
+					list[i].data = list[i].data.concat(data)
+					list[i].noReadNum += 1
+					list.unshift(list.splice(i, 1)[0])
+					ok = true
+					break
+				}
+				if(!ok) {
+					list.push(info)
+					list.unshift(list.splice(list.length-1, 1)[0])
+				}
+			}
+		}
+		uni.setStorageSync('msgLists', list)
+		uni.$emit('storage', 1);
 	}
 }
 

@@ -9,7 +9,7 @@ Vue.config.productionTip = false
 //引入websocket文件
 import wsRequest from './common/socket.js'
 //开启websocket
-let websocket = new wsRequest("ws://45.158.35.6:2348",5000)
+let websocket = new wsRequest("ws://45.158.35.6:2348",30000)
 //挂载到全局
 Vue.prototype.$socket = websocket
 
@@ -42,6 +42,6 @@ App.mpType = 'app'
 // });
 
 const app = new Vue({
-    ...App
+    ...App, store
 })
 app.$mount()

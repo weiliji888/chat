@@ -5,11 +5,11 @@
 				<u-index-anchor :index="item" />
 				<!-- 好友列表 -->
 				<block v-for="(itemU, indexU) in userList" :key="indexU" v-if="itemU.group==item">
-					<view class="list-cell flex ai-ce" @click="clickUser(itemU.token)">
+					<view class="list-cell flex ai-ce" @click="clickUser(indexU)">
 						<view class="avatar">
-							<u-avatar :src="itemU.avatar" mode="circle"></u-avatar>
+							<u-avatar :src="itemU.user.avatar" mode="circle"></u-avatar>
 						</view>
-						<view class="username">{{ itemU.username }}</view>
+						<view class="username">{{ itemU.user.name }}</view>
 						<view class="username-label">{{ itemU.label }}</view>
 					</view>
 				</block>
@@ -24,7 +24,7 @@ export default {
 		return {
 			scrollTop: 0,
 			indexList: [], // A B C 索引列表
-			userList: [], // 好友列表
+			userList: [], // 好友列表 
 		};
 	},
 	methods: {
@@ -37,49 +37,39 @@ export default {
 		/**
 		 * 获取好友列表
 		 * */
-		getUserList() {
-			let data = [
-				{
-					group: 'A',
-					token: 'aaaa',
-					username: '用户1',
-					avatar: '/static/logo.png',
-					label: '标签'
-				},
-				{
-					group: 'A',
-					token: 'aaaa',
-					username: '用户1',
-					avatar: '/static/logo.png',
-					label: '标签'
-				},
-				{
-					group: 'B',
-					token: 'aaaa',
-					username: '用户1',
-					avatar: '/static/logo.png',
-					label: '标签'
-				},
-				{
-					group: 'E',
-					token: 'aaaa',
-					username: '用户1',
-					avatar: '/static/logo.png',
-					label: '标签'
+		async getUserList() {
+			let data = [];
+			let _this = this;
+			let res, err = await this.$http.requests({
+				url: 'friendsLists',
+				methods: 'POST',
+				data: {},
+			}).then((res)=>{
+				if(res.code == 300000) {
+					for(let i=0; i<res.data.length; i++) {
+						_this.indexList.push(res.data[i].group)
+					}
+					_this.indexList = Array.from(new Set(_this.indexList)) // 索引列表
+					_this.userList = res.data
+				} else {
+					uni.showToast({title: res.msg, icon:'none'})
 				}
-			]
-			
-			for(let i=0; i<data.length; i++) {
-				this.indexList.push(data[i].group)
-			}
-			this.indexList = Array.from(new Set(this.indexList)) // 索引列表
-			this.userList = data
+			}).catch((err)=>{
+				console.log(err)
+			})
 		},
 		/**
 		 * 点击好友
 		 * */
-		clickUser(token) {
-			console.log(666)
+		clickUser(index) {
+			let data = { 
+				to_id: this.userList[index].user.id,
+				to_name: this.userList[index].user.name,
+				to_avatar: this.userList[index].user.avatar,
+			}
+			uni.navigateTo({
+				url: '/pages/panel/panel?param='+encodeURIComponent(JSON.stringify(data))
+			})
 		}
 	},
 	onLoad() {

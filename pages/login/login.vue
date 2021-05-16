@@ -154,12 +154,24 @@ export default {
 				url: 'login',
 				methods: 'POST',
 				data: this.loginParams
-			}).then((res)=>{
+			}).then((res) => {
 				if(res.code == 300009) {
-					// uni.setStorageSync('token', res.data.token);
-					// uni.setStorageSync('userinfo', res.data);
+					uni.setStorageSync('user_info', res.data)
+					uni.setStorageSync('token', res.data.token)
+					this.$sotre.store.state.loginStatus = true // 登录状态
+					this.$sotre.store.state.userinfo = res.data
 					uni.showToast({title: res.msg, icon:'success'});
-					setTimeout(()=>{ uni.switchTab({url: '/pages/home/home'})}, 1500);
+					
+					let init = { 
+						type: 'userClientBindSocket', 
+						from_id: this.$sotre.store.state.userinfo.user_id,
+						data: '', 
+						code: 200, 
+						msg: 'ok' ,
+					}
+					let message = this.$socket._formate(init)
+					this.$socket.send(message)
+					setTimeout(()=>{ uni.switchTab({url: '/pages/goods/goods'})}, 1500);
 				} else {
 					uni.showToast({title: res.msg, icon:'none'})
 				}

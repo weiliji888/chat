@@ -1,24 +1,29 @@
 <template>
 	<view>
-		<block v-for="(item, index) in lists" :key="index">
-			<view class="msg-lists">
-				<view class="flex ai-ce" @click="chatWith(index, item.token, item.username)" @touchmove="tapFunc(index)" @touchstart="touchStart" @touchend="touchEnd">
-					<view class="msg-lists-avatar"><u-avatar :src="item.avatar" mode="circle"></u-avatar></view>
-					<view class="msg-lists-right flex jc-sb ai-ce">
-						<view class="msg-lists-right-left">
-							<view class="username">{{ item.username }}</view>
-							<view class="user-text">{{ item.newestMsg }}</view>
-							<view class="msg-lists-right-time">{{ item.time }}</view>
-						</view>
+		<view class="msg-lists" v-for="(item, index) in lists" :key="index">
+			<view class="flex ai-ce" 
+				@click="chatWith(index, item.from_id, item.from_name, item.from_avatar)" 
+				@touchmove="tapFunc(index)" 
+				@touchstart="touchStart"
+				@touchend="touchEnd"
+			>
+				<view class="msg-lists-avatar">
+					<u-avatar :src="item.to_id==from_id ? item.from_avatar : item.to_avatar" mode="circle"></u-avatar>
+				</view>
+				<view class="msg-lists-right flex jc-sb ai-ce">
+					<view class="msg-lists-right-left">
+						<view class="username">{{ item.to_id==from_id ? item.from_name : item.to_name }}</view>
+						<view class="user-text">{{ item.data[item.data.length-1].data }}</view>
+						<view class="msg-lists-right-time">{{ item.data[item.data.length-1].time }}</view>
 					</view>
-					<u-badge type="error" class="badge count-msg" :count="item.count" :offset="[10, 14]"></u-badge>
 				</view>
-
-				<view class="operation-mask flex ai-ce jc-ce" :class="[item.showDelete == true ? 'operation-mask-leftin' : 'operation-mask-rightout']">
-					<view class="delete"><image src="/static/icons/delete.png" mode="widthFix" @click="deleteList(index)"></image></view>
-				</view>
+				<u-badge type="error" class="badge count-msg" :count="item.noReadNum" :offset="[10, 14]"></u-badge>
 			</view>
-		</block>
+
+			<!-- <view class="operation-mask flex ai-ce jc-ce" :class="[item.showDelete == true ? 'operation-mask-leftin' : 'operation-mask-rightout']">
+				<view class="delete"><image src="/static/icons/delete.png" mode="widthFix" @click="deleteList(index)"></image></view>
+			</view> -->
+		</view>
 	</view>
 </template>
 
@@ -31,7 +36,17 @@ export default {
 			default: function() {
 				return [];
 			}
+		},
+		// 当前用户id
+		from_id: {
+			type: Number,
+			default: function() {
+				return 0;
+			}
 		}
+	},
+	mounted() {
+		// console.log(this.lists)
 	},
 	data() {
 		return {
@@ -50,9 +65,9 @@ export default {
 		 * 点击聊天列表
 		 * @param uid
 		 */
-		chatWith(index, tokne, username) {
+		chatWith(index, to_id, to_name, to_avatar) {
 			this.index = index;
-			this.$emit('pchat', { index: index, token: tokne, username: username });
+			this.$emit('pchat', { index: index, to_id: to_id, to_name: to_name, to_avatar: to_avatar });
 		},
 
 		/**
@@ -129,7 +144,7 @@ export default {
 	color: var(--whiteBg);
 }
 .msg-lists-right-left {
-	width: 60%;
+	width: 100%;
 }
 .user-text {
 	width: 100%;

@@ -2,10 +2,10 @@
 	<view class="main">
 		<view class="user-info">
 			<view class="user-info-detail flex ai-ce">
-				<u-avatar src="/static/bg/x1.jpg" size="160"></u-avatar>
+				<u-avatar :src="user.headimgurl ? user.headimgurl : '/static/bg/x1.jpg'" size="160"></u-avatar>
 				<view class="user-name-sign">
-					<view class="user-name">筱崎爱</view>
-					<view class="user-name-sign">今天天气很好哦</view>
+					<view class="user-name">{{ user.username }}</view>
+					<view class="user-name-sign">{{ user.phone }}</view>
 				</view>
 			</view>
 			
@@ -44,10 +44,13 @@
 <script>
 export default {
 	data() {
-		return {};
+		return {
+			user: {}, // 用户信息
+		};
 	},
 	created() {
-		console.log(this.$sotre)
+		// this.user = this.$sotre.store.state.userinfo;
+		this.user = uni.getStorageSync('user_info')
 	},
 	methods: {}
 };
@@ -88,7 +91,7 @@ export default {
 .user-name-sign{ color: var(--grayColor2); }
 
 .user-detail-info{
-	position: absolute; bottom: -160rpx; left: 5%; right: 5%; z-index: 999;
+	position: absolute; bottom: -152rpx; left: 5%; right: 5%; z-index: 999;
 	background-color: var(--whiteBack);
 	height: 300rpx; width: 90%;
 	border-radius: 10rpx; opacity: 0.7;

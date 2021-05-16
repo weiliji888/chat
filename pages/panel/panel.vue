@@ -4,13 +4,13 @@
 		<view class="main-content padding20">
 			<scroll-view scroll-y class="scollview" :scroll-top="scrollTop" :scroll-with-animation="true" :style="{ height: style.contentHeight + 'px' }">
 				<view v-for="(item, index) in msgList" :key="index">
-					<view class="msg-per list-left flex" v-if="item.from_token != userinfo.token">
+					<view class="msg-per list-left flex" v-if="item.from_id != user.user_id">
 						<view class="user-avatar"><u-avatar :src="item.avatar" mode="circle" size="60"></u-avatar></view>
-						<view class="user-msg">{{ item.message }}</view>
+						<view class="user-msg">{{ item.data }}</view>
 					</view>
 
 					<view class="msg-per list-right flex" v-else>
-						<view class="user-msg1">{{ item.message }}</view>
+						<view class="user-msg1">{{ item.data }}</view>
 						<view class="user-avatar1"><u-avatar :src="item.avatar" mode="circle" size="60"></u-avatar></view>
 					</view>
 				</view>
@@ -36,21 +36,24 @@
 </template>
 
 <script>
+import utils from '../../utils/index.js'
 export default {
 	data() {
 		return {
-			token: null, // 用户token
-			username: null, // 用户昵称
-			input: null ,// 输入框消息
-			
+			to_id: null, // 对方用户token
+			to_name: null, // 对方用户昵称
+			to_avatar: null, // 对方头像
+			input: null, // 输入框消息
+
 			// 高度
 			scrollTop: 0,
-			style:{
+			style: {
 				contentHeight: 0,
 				itemH: 0
 			},
 			msgList: [], // 消息列表
-			userinfo: uni.getStorageSync('userinfo'), // 当前用户的信息
+			user: {}, // 当前用户的信息
+			index: null, // 消息列表下标
 		};
 	},
 	methods: {
@@ -60,67 +63,62 @@ export default {
 		 * */
 		getUserMsg() {
 			uni.setNavigationBarTitle({
-				title: '和' + this.username + '聊天中...'
+				title: '和' + this.to_name + '聊天中...'
 			});
-			let data = [
-				{
-					from_token: this.userinfo.token,
-					from_name: 'a',
-					to_token: 'bbbb',
-					to_name: 'b',
-					avatar: '/static/logo.png',
-					message: 'hi~，发的辅导辅导费的辅导辅导费的辅导辅导发的，辅导辅导费的发的发，大幅度发的，辅导辅导发，的辅导费，地方发的， 地方，地方，大幅度，发的，发',
-					time: '2021-04-03',
-				},
-				{
-					from_token: 'bbbb',
-					from_name: 'b',
-					to_token: 'aaaa',
-					to_name: 'a',
-					avatar: '/static/logo.png',
-					message: 'hello, what can I help you?',
-					time: '2021-04-03',
-				},
-				{
-					from_token: this.userinfo.token,
-					from_name: 'a',
-					to_token: 'bbbb',
-					to_name: 'b',
-					avatar: '/static/logo.png',
-					message: 'I want a pie. fdlfdlfdlfdlfdlfdlf发的理发店理发店理发反对浪费代码理发店反对浪费代码了发电量方面的浪费 辅导费没了发的辅导辅导费的辅导辅导',
-					time: '2021-04-03',
-				},
-				{
-					from_token: 'bbbb',
-					from_name: 'b',
-					to_token: 'aaaa',
-					to_name: 'a',
-					avatar: '/static/logo.png',
-					message: 'okay, please wait a second.',
-					time: '2021-04-03',
-				},
-			]
+			let data = [];
 			this.msgList = data;
 		},
 		/**
 		 * 发送消息
 		 * */
 		sendMsg() {
-			if(!this.input) {
-				return uni.showToast({ title: "啥也没有写呢~", icon: 'none' });
+			if (!this.input) {
+				return uni.showToast({ title: '啥也没有写呢~', icon: 'none' });
 			}
 			let data = {
-				from_token: this.userinfo.token,
-				from_name: 'a',
-				to_token: 'bbbb',
-				to_name: 'b',
-				avatar: '/static/logo.png',
-				message: this.input,
-				time: '2021-04-03',
-			}
+				from_id: this.user.user_id,
+				from_name: this.user.username,
+				from_avatar: this.user.headimgurl,
+				to_id: this.to_id,
+				to_name: this.to_name,
+				to_avatar: this.to_avatar,
+				data: this.input,
+				time: utils.getDateTime(),
+				type: 'userClientChat',
+				msgType: 'text',
+				code: 200,
+				msg: 'ok' ,
+			};
+			
 			this.input = null;
 			this.msgList.push(data)
-			this.scrollTotopFunc() // 滚动
+			this.scrollTotopFunc(); // 滚动
+			let message = this.$socket._formate(data)
+			this.pushMsgLists(data)
+			// this.$socket.handleMessage(data)
+			this.$socket.send(message)
+		},
+		/**
+		 * 新消息加入本地列表
+		 * */
+		pushMsgLists(data) {
+			let list = uni.getStorageSync('msgLists') ? uni.getStorageSync('msgLists') : [];
+			let info = {
+				from_id: data.from_id,
+				from_name: data.from_name,
+				from_avatar: data.from_avatar,
+				to_id: data.to_id,
+				to_name: data.to_name,
+				to_avatar: data.to_avatar,
+				data: [data],
+				noReadNum: 1,
+			}
+			if(list.length == 0) {
+				list.push(info)
+			} else {
+				list[this.index].data.push(data)
+				list.unshift(list.splice(list.length-1, 1)[0])
+			}
 		},
 		/**
 		 * 选择图片
@@ -145,10 +143,10 @@ export default {
 				q.select('.scollview').boundingClientRect();
 				q.selectAll('.msg-per').boundingClientRect();
 				q.exec(result => {
-					result[1].forEach((ret)=>{
+					result[1].forEach(ret => {
 						this.style.itemH += ret.height;
 					});
-					if(this.style.itemH >= this.style.contentHeight) {
+					if (this.style.itemH >= this.style.contentHeight) {
 						this.scrollTop = this.style.itemH;
 					}
 				});
@@ -162,30 +160,53 @@ export default {
 			try {
 				const res = uni.getSystemInfoSync();
 				this.style.contentHeight = res.windowHeight - uni.upx2px(210);
-			}catch(e){ }
-		},
+			} catch (e) {}
+		}
 	},
 	onLoad(option) {
 		const item = JSON.parse(decodeURIComponent(option.param)); //用户 token
-		this.token = item.uid;
-		this.username = item.username;
+		this.index = item.index 
+		this.to_id = item.to_id;
+		this.to_name = item.to_name;
+		this.to_avatar = item.to_avatar
 		this.getUserMsg(); // 获取用户聊天信息
 		this.initData(); // 初始化高度
+		console.log(item)
+		var _this = this;
+		// 消息
+		this.$nextTick(() => {
+			let list = uni.getStorageSync('msgLists')
+			for(let i=0; i<list.length; i++) {
+				if(list[i].to_id == _this.user.user_id) {
+					_this.msgList = list[i].data
+				}
+			}
+		})
+		uni.$on('storage', (data) => {
+			let list = uni.getStorageSync('msgLists')
+			for(let i=0; i<list.length; i++) {
+				if(list[i].to_id == _this.user.user_id) {
+					_this.msgList = list[i].data
+				}
+			}
+		})
 	},
 	mounted() {
 		this.scrollTotopFunc(); // 滚动到底部
 	},
 	created() {
-	    // 回车发送
-	    let _this = this
-	    document.onkeypress = (event)=> {
-	      let keycode = document.all ? event.keyCode : event.which
-	      if(keycode == 13) {
-	        _this.sendMsg()
-	        return false
-	      }
-	    }
-	},
+		// 回车发送
+		let _this = this;
+		document.onkeypress = event => {
+			let keycode = document.all ? event.keyCode : event.which;
+			if (keycode == 13) {
+				_this.sendMsg();
+				return false;
+			}
+		};
+		// this.user = this.$sotre.store.state.userinfo
+		this.user = uni.getStorageSync('user_info')
+	}
 };
 </script>
 
@@ -247,7 +268,9 @@ export default {
 .list-right {
 	margin-bottom: 30upx;
 }
-.list-right{ justify-content: flex-end; }
+.list-right {
+	justify-content: flex-end;
+}
 .user-avatar1 {
 	margin-left: 28rpx;
 }
@@ -256,7 +279,8 @@ export default {
 	background-color: var(--bgGray);
 	padding: 20upx;
 	line-height: 40rpx;
-	position: relative; width: 80%;
+	position: relative;
+	width: 80%;
 }
 .user-msg1:before {
 	position: absolute;

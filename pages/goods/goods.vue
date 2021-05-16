@@ -111,6 +111,7 @@
 		},
 		onLoad() {
 			this.addRandomData();
+			// console.log(this.$sotre.store.state.userinfo.token)
 		},
 		// 触底事件
 		onReachBottom() {
